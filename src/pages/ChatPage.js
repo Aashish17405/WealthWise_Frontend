@@ -1,37 +1,36 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Send, X, BadgeDollarSign } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import Cookies from 'js-cookie';
+import React, { useState, useRef, useEffect } from "react";
+import { Send, X, BadgeDollarSign } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import axios from "axios";
+import Cookies from "js-cookie";
+import { useNavigate } from "react-router-dom";
 
-const ChatBot = ({ mail }) => {
+const ChatBotPage = ({ mail }) => {
   const navigate = useNavigate();
-
   function formatChatbotResponse(response) {
     return response
-      .replace(/\n/g, '<br>') 
-      .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>'); 
+      .replace(/\n/g, "<br>")
+      .replace(/\*\*(.*?)\*\*/g, "<b>$1</b>");
   }
 
   const [messages, setMessages] = useState([
     {
       id: 1,
-      content: "Hi there! I'm Niveshak, an AI assistant. How can I help you today?",
-      sender: 'Niveshak',
+      content:
+        "Hi there! I'm Niveshak, an AI assistant. How can I help you today?",
+      sender: "Niveshak",
       timestamp: new Date(),
     },
   ]);
-  const [input, setInput] = useState('');
+  const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
-  const [messageButton, setMessageButton] = useState(true);
-  const [nivloading,setnivloading] = useState(false);
+  const [nivloading, setnivloading] = useState(false);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   useEffect(() => {
@@ -40,38 +39,38 @@ const ChatBot = ({ mail }) => {
 
   const handleSendMessage = async () => {
     setnivloading(true);
-    if (input.trim() === '') return;
+    if (input.trim() === "") return;
 
     const userMessage = {
       id: messages.length + 1,
       content: input,
-      sender: 'user',
+      sender: "user",
       timestamp: new Date(),
     };
 
     setMessages((prev) => [...prev, userMessage]);
-    setInput('');
+    setInput("");
     inputRef.current?.focus();
     setIsLoading(true);
 
     try {
-      const sessionToken = Cookies.get('sessionToken');
+      const sessionToken = Cookies.get("sessionToken");
       const response = await axios.post(
-        `${process.env.REACT_APP_BACKEND_URL}chatbot4`,
+        `${process.env.REACT_APP_BACKEND_URL}rag`,
         { question: input },
         {
           headers: {
             Authorization: `Bearer ${sessionToken}`,
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           withCredentials: true,
         }
       );
 
       const chatBotMessage = {
-        id: messages.length +2,
+        id: messages.length + 2,
         content: formatChatbotResponse(response.data.answer),
-        sender: 'Niveshak',
+        sender: "Niveshak",
         timestamp: new Date(),
       };
 
@@ -80,19 +79,16 @@ const ChatBot = ({ mail }) => {
       setnivloading(false);
       console.log(nivloading);
     } catch (error) {
-      console.error('Error fetching chatbot response:', error);
+      console.error("Error fetching chatbot response:", error);
       setnivloading(false);
-
     } finally {
       setIsLoading(false);
       setnivloading(false);
-      
-
     }
   };
 
   const handleKeyPress = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey &&  !isLoading) {
+    if (e.key === "Enter" && !e.shiftKey && !isLoading) {
       e.preventDefault();
       setnivloading(true);
       handleSendMessage();
@@ -107,7 +103,7 @@ const ChatBot = ({ mail }) => {
       className={`
         fixed inset-0 z-50 bg-transparent-900/90 backdrop-blur-sm 
         bg-gradient-to-br from-blue-900/70 to-purple-900/70
-        ${isMinimized ? 'h-16 bottom-0 w-full' : 'h-full'}
+        ${isMinimized ? "h-16 bottom-0 w-full" : "h-full"}
         flex flex-col
       `}
     >
@@ -117,7 +113,7 @@ const ChatBot = ({ mail }) => {
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
           className="bg-red-700 text-white p-2 rounded-full hover:bg-red-600"
-          onClick={() => navigate('/home')}
+          onClick={() => navigate("/home")}
         >
           <X />
         </motion.button>
@@ -137,25 +133,29 @@ const ChatBot = ({ mail }) => {
       <div
         className={`
         flex-grow overflow-y-auto p-4 space-y-4
-        ${isMinimized ? 'h-0' : ''}
+        ${isMinimized ? "h-0" : ""}
       `}
       >
         <AnimatePresence>
           {messages.map((msg) => (
             <motion.div
               key={msg.id}
-              initial={{ opacity: 0, x: msg.sender === 'user' ? 50 : -50 }}
+              initial={{ opacity: 0, x: msg.sender === "user" ? 50 : -50 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.3 }}
-              className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+              className={`flex ${
+                msg.sender === "user" ? "justify-end" : "justify-start"
+              }`}
             >
               <div
                 className={`
                   max-w-[80%] p-3 rounded-lg shadow-md
-                  ${msg.sender === 'user'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-700 text-gray-200'}
+                  ${
+                    msg.sender === "user"
+                      ? "bg-blue-600 text-white"
+                      : "bg-gray-700 text-gray-200"
+                  }
                 `}
               >
                 <div dangerouslySetInnerHTML={{ __html: msg.content }} />
@@ -181,7 +181,6 @@ const ChatBot = ({ mail }) => {
               </div>
             </motion.div>
           )}
-          
         </AnimatePresence>
       </div>
 
@@ -191,17 +190,16 @@ const ChatBot = ({ mail }) => {
         animate={{ y: 0, opacity: 1 }}
         className={`
           border-t border-gray-600 p-4 bg-gray-800/50 
-          ${isMinimized ? 'hidden' : 'block'}
+          ${isMinimized ? "hidden" : "block"}
         `}
       >
         <div className="flex items-center space-x-2">
-        <textarea
+          <textarea
             ref={inputRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyPress} 
+            onKeyDown={handleKeyPress}
             placeholder="Message Niveshak..."
-            
             className="
               flex-grow p-2 border border-gray-600 bg-gray-800 text-white rounded-lg 
               focus:outline-none focus:ring-2 focus:ring-purple-500
@@ -213,7 +211,7 @@ const ChatBot = ({ mail }) => {
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
             onClick={handleSendMessage}
-            disabled={input.trim() === '' || isLoading}
+            disabled={input.trim() === "" || isLoading}
             className="
               bg-gradient-to-r from-blue-600 to-purple-600 
               text-white p-3 rounded-full 
@@ -228,4 +226,4 @@ const ChatBot = ({ mail }) => {
   );
 };
 
-export default ChatBot;
+export default ChatBotPage;

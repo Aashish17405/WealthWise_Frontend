@@ -1,6 +1,6 @@
-import React, { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from 'framer-motion';
+import { motion } from "framer-motion";
 
 const PageNotFound = () => {
   const navigate = useNavigate();
@@ -13,26 +13,27 @@ const PageNotFound = () => {
         const rect = containerRef.current.getBoundingClientRect();
         setMousePosition({
           x: e.clientX - rect.left,
-          y: e.clientY - rect.top
+          y: e.clientY - rect.top,
         });
       }
     };
 
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => window.removeEventListener("mousemove", handleMouseMove);
   }, []);
 
   const glowStyle = {
-    position: 'absolute',
+    position: "absolute",
     top: mousePosition.y,
     left: mousePosition.x,
-    transform: 'translate(-50%, -50%)',
-    width: '300px',
-    height: '300px',
-    background: 'radial-gradient(circle, rgba(37, 117, 252, 0.2) 0%, transparent 70%)',
-    borderRadius: '50%',
-    pointerEvents: 'none',
-    zIndex: 1
+    transform: "translate(-50%, -50%)",
+    width: "300px",
+    height: "300px",
+    background:
+      "radial-gradient(circle, rgba(37, 117, 252, 0.2) 0%, transparent 70%)",
+    borderRadius: "50%",
+    pointerEvents: "none",
+    zIndex: 1,
   };
 
   const home = () => {
@@ -40,7 +41,7 @@ const PageNotFound = () => {
   };
 
   return (
-    <motion.div 
+    <motion.div
       ref={containerRef}
       className="page-not-found-wrapper"
       initial={{ opacity: 0 }}
@@ -49,53 +50,58 @@ const PageNotFound = () => {
     >
       <div style={glowStyle} />
 
-      <motion.div 
+      <motion.div
         className="page-not-found-container"
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        transition={{ 
-          type: "spring", 
-          stiffness: 100, 
-          damping: 10 
+        transition={{
+          type: "spring",
+          stiffness: 100,
+          damping: 10,
         }}
       >
         <div className="error-content">
-          <motion.div 
+          <motion.div
             className="error-code"
             initial={{ y: 50, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.2 }}
           >
-            <motion.span 
+            <motion.span
               whileHover={{ scale: 1.1 }}
               transition={{ type: "spring", stiffness: 300 }}
             >
               4
             </motion.span>
             <div className="error-divider">
-              <motion.svg 
-                viewBox="0 0 24 24" 
-                fill="none" 
+              <motion.svg
+                viewBox="0 0 24 24"
+                fill="none"
                 stroke="currentColor"
                 animate={{ rotate: [0, 10, -10, 0] }}
-                transition={{ 
-                  duration: 1.5, 
-                  repeat: Infinity, 
-                  repeatType: "reverse" 
+                transition={{
+                  duration: 1.5,
+                  repeat: Infinity,
+                  repeatType: "reverse",
                 }}
               >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
               </motion.svg>
             </div>
-            <motion.span 
+            <motion.span
               whileHover={{ scale: 1.1 }}
               transition={{ type: "spring", stiffness: 300 }}
             >
               4
             </motion.span>
           </motion.div>
-          
-          <motion.h1 
+
+          <motion.h1
             className="error-title"
             initial={{ y: 30, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
@@ -103,18 +109,18 @@ const PageNotFound = () => {
           >
             Lost in the Digital Wilderness
           </motion.h1>
-          
-          <motion.p 
+
+          <motion.p
             className="error-description"
             initial={{ y: 40, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.6 }}
           >
-            The page you're looking for has disappeared into the void. 
-            Let's find our way back to safety.
+            The page you're looking for has disappeared into the void. Let's
+            find our way back to safety.
           </motion.p>
-          
-          <motion.button 
+
+          <motion.button
             className="explore-button"
             onClick={home}
             whileHover={{ scale: 1.05 }}
@@ -124,25 +130,30 @@ const PageNotFound = () => {
             transition={{ delay: 0.8 }}
           >
             Explore Home
-            <motion.div 
+            <motion.div
               className="button-icon"
               animate={{ x: [0, 5, 0] }}
-              transition={{ 
-                duration: 0.8, 
-                repeat: Infinity, 
-                repeatType: "reverse" 
+              transition={{
+                duration: 0.8,
+                repeat: Infinity,
+                repeatType: "reverse",
               }}
             >
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M17 8l4 4m0 0l-4 4m4-4H3"
+                />
               </svg>
             </motion.div>
           </motion.button>
         </div>
       </motion.div>
-      
+
       <style jsx global>{`
-        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;600;700&display=swap');
+        @import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;600;700&display=swap");
 
         * {
           box-sizing: border-box;
@@ -157,12 +168,12 @@ const PageNotFound = () => {
           align-items: center;
           min-height: 100vh;
           background: linear-gradient(
-            135deg, 
-            #121212 0%, 
-            #1e1e1e 50%, 
+            135deg,
+            #121212 0%,
+            #1e1e1e 50%,
             #2a2a2a 100%
           );
-          font-family: 'Space Grotesk', sans-serif;
+          font-family: "Space Grotesk", sans-serif;
           overflow: hidden;
           perspective: 1000px;
         }
@@ -180,8 +191,7 @@ const PageNotFound = () => {
           padding: 50px;
           max-width: 600px;
           width: 100%;
-          box-shadow: 
-            0 15px 35px rgba(0, 0, 0, 0.2),
+          box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2),
             0 5px 15px rgba(0, 0, 0, 0.1);
         }
 
@@ -203,11 +213,7 @@ const PageNotFound = () => {
           font-size: 120px;
           font-weight: 700;
           color: transparent;
-          background: linear-gradient(
-            135deg, 
-            #6a11cb 0%, 
-            #2575fc 100%
-          );
+          background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
           background-clip: text;
           -webkit-background-clip: text;
           line-height: 1;
@@ -233,11 +239,7 @@ const PageNotFound = () => {
         .error-title {
           font-size: 36px;
           margin-bottom: 20px;
-          background: linear-gradient(
-            135deg, 
-            #6a11cb 0%, 
-            #2575fc 100%
-          );
+          background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
           background-clip: text;
           -webkit-background-clip: text;
           color: transparent;
@@ -254,11 +256,7 @@ const PageNotFound = () => {
           align-items: center;
           gap: 15px;
           padding: 15px 30px;
-          background: linear-gradient(
-            135deg, 
-            #6a11cb 0%, 
-            #2575fc 100%
-          );
+          background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
           color: white;
           border: none;
           border-radius: 50px;

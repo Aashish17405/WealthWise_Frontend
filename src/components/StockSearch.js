@@ -1,12 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import {
   Search,
-  TrendingUp,
-  DollarSign,
   AlertTriangle,
   ArrowRight,
-  ChevronDown,
-  ChevronUp,
   X,
   Loader,
   ShoppingCart,
@@ -43,6 +39,7 @@ const StockSearch = ({ email, onSuccess }) => {
     function handleClickOutside(event) {
       if (searchRef.current && !searchRef.current.contains(event.target)) {
         setShowResults(false);
+        setShowTrending(false);
       }
     }
 
@@ -55,6 +52,7 @@ const StockSearch = ({ email, onSuccess }) => {
   // Search for stocks by symbol
   const searchStock = async () => {
     if (!searchTerm.trim()) {
+      // If no search term, show trending stocks
       setShowTrending(true);
       setSearchResults([]);
       setShowResults(true);
@@ -66,7 +64,7 @@ const StockSearch = ({ email, onSuccess }) => {
     setShowTrending(false);
 
     try {
-      // For demo purposes, we'll simulate a search result
+      // For now, we'll simulate a search result using trending stocks
       // In a real app, you would call an API endpoint to search for stocks
       const simulatedResults = trendingStocks.filter(
         (stock) =>
@@ -74,11 +72,21 @@ const StockSearch = ({ email, onSuccess }) => {
           stock.name.toLowerCase().includes(searchTerm.toLowerCase())
       );
 
+      // If no results from trending, still show the searched term as an option
+      if (simulatedResults.length === 0 && searchTerm.trim()) {
+        simulatedResults.push({
+          symbol: searchTerm.toUpperCase(),
+          name: `Search for ${searchTerm.toUpperCase()}`,
+        });
+      }
+
       setSearchResults(simulatedResults);
       setShowResults(true);
     } catch (err) {
+      console.error("Error searching stocks:", err);
       setError("Failed to search for stocks. Please try again.");
       setSearchResults([]);
+      setShowResults(true);
     } finally {
       setLoading(false);
     }
@@ -91,29 +99,42 @@ const StockSearch = ({ email, onSuccess }) => {
 
     try {
       const getCookie = Cookies.get("sessionToken");
+      console.log("Fetching price for symbol:", symbol);
+      const uppercaseSymbol = symbol.toUpperCase();
       const response = await axios.get(
-        `${process.env.REACT_APP_BACKEND_URL}stock/price?symbol=${symbol}`,
+        `${process.env.REACT_APP_BACKEND_URL}stock/price?symbol=${uppercaseSymbol}`,
         {
           headers: {
             Authorization: `Bearer ${getCookie}`,
+            "Content-Type": "application/json",
           },
           withCredentials: true,
         }
       );
 
-      // Axios response data is directly available in response.data
-      setSelectedStock(response.data);
+      console.log("Stock price response:", response.data);
+
+      // Use the response data structure from your backend route
+      setSelectedStock({
+        symbol: response.data.symbol,
+        name: response.data.name,
+        price: response.data.price,
+      });
       setShowResults(false);
     } catch (err) {
+      console.error("Error fetching stock price:", err);
       setError("Error fetching stock price. Please try again.");
+
       // Only set mock data if we're in development mode
       if (process.env.NODE_ENV === "development") {
+        console.log("Using mock data for development");
         setError(null); // Clear error since we're providing mock data
         setSelectedStock({
           symbol: symbol,
           name: trendingStocks.find((s) => s.symbol === symbol)?.name || symbol,
           price: Math.random() * 2000 + 500, // Random price between 500 and 2500
         });
+        setShowResults(false);
       }
     } finally {
       setLoading(false);
@@ -211,13 +232,13 @@ const StockSearch = ({ email, onSuccess }) => {
     <div
       className="w-full bg-white/10 backdrop-blur-sm rounded-xl border border-white/20 p-6"
       ref={searchRef}
-      style={{ zIndex: 40 }}
+      style={{ zIndex: 1 }}
     >
       {" "}
       {/* Notification */}
       {notification && (
         <div
-          className={`absolute top-0 right-0 m-4 p-3 rounded-lg shadow-lg z-50 flex items-center max-w-md ${
+          className={`absolute top-0 right-0 m-4 p-3 rounded-lg shadow-lg z-20 flex items-center max-w-md ${
             notification.type === "error" ? "bg-red-500/90" : "bg-green-500/90"
           } text-white`}
         >
@@ -234,17 +255,52 @@ const StockSearch = ({ email, onSuccess }) => {
         Search & Buy Stocks
       </h2>
       {/* Search Input Section */}
-      <div className="mb-6">
+      <div className="mb-6 relative">
         <div className="flex items-center">
           <div className="relative flex-grow">
             <input
               type="text"
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => {
+                const value = e.target.value;
+                setSearchTerm(value);
+
+                // Auto-search as user types, but with debouncing effect
+                if (value.trim()) {
+                  // Clear any existing timeout
+                  if (window.searchTimeout) {
+                    clearTimeout(window.searchTimeout);
+                  }
+                  // Set new timeout for auto-search
+                  window.searchTimeout = setTimeout(() => {
+                    searchStock();
+                  }, 300);
+                } else {
+                  // If input is empty, show trending immediately
+                  setShowTrending(true);
+                  setSearchResults([]);
+                  setShowResults(true);
+                }
+              }}
               onKeyDown={handleSearchKeyDown}
               onClick={() => {
+                // Only show trending when input is clicked and there's no search term
                 if (searchTerm.trim() === "") {
                   setShowTrending(true);
+                  setSearchResults([]);
+                  setShowResults(true);
+                } else {
+                  // If there's a search term, show existing results
+                  setShowResults(true);
+                }
+              }}
+              onFocus={() => {
+                // Show dropdown on focus as well
+                if (searchTerm.trim() === "") {
+                  setShowTrending(true);
+                  setSearchResults([]);
+                  setShowResults(true);
+                } else {
                   setShowResults(true);
                 }
               }}
@@ -253,11 +309,13 @@ const StockSearch = ({ email, onSuccess }) => {
             />
             {searchTerm && (
               <button
-                onClick={() => {
+                onClick={(e) => {
+                  e.stopPropagation(); // Prevent triggering input focus
                   setSearchTerm("");
                   setSearchResults([]);
                   setShowResults(false);
                   setShowTrending(false);
+                  setSelectedStock(null);
                 }}
                 className="absolute right-12 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
               >
@@ -280,7 +338,7 @@ const StockSearch = ({ email, onSuccess }) => {
 
         {/* Search Results Dropdown */}
         {showResults && (
-          <div className="absolute z-50 left-0 right-0 bg-gray-800/95 backdrop-blur-sm mt-1 rounded-lg border border-white/20 shadow-xl max-h-80 overflow-y-auto mx-0">
+          <div className="absolute z-10 left-0 right-0 bg-gray-800/95 backdrop-blur-sm mt-1 rounded-lg border border-white/20 shadow-xl max-h-80 overflow-y-auto mx-0">
             {loading ? (
               <div className="p-4 flex justify-center">
                 <Loader className="w-6 h-6 animate-spin text-indigo-400" />
@@ -311,12 +369,6 @@ const StockSearch = ({ email, onSuccess }) => {
               </ul>
             ) : showTrending ? (
               <div>
-                <div className="p-3 border-b border-white/10 bg-white/5">
-                  <h3 className="font-medium flex items-center">
-                    <TrendingUp className="w-4 h-4 mr-2 text-indigo-400" />
-                    Trending Stocks
-                  </h3>
-                </div>
                 <ul>
                   {trendingStocks.map((stock) => (
                     <li

@@ -1,11 +1,20 @@
-import React, { useState, useEffect } from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { motion, AnimatePresence } from 'framer-motion';
-import { TrendingUpIcon, TrendingDownIcon } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import Navbar from './navbar';
-import axios from 'axios';
-import Cookies from 'js-cookie';
+import { useState, useEffect } from "react";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
+import { motion, AnimatePresence } from "framer-motion";
+import { TrendingUpIcon, TrendingDownIcon } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import Navbar from "./navbar";
+import axios from "axios";
+import Cookies from "js-cookie";
 
 const ExpenseComparison = ({ data, mail, props }) => {
   const [analysisdata, setAnalysisdata] = useState(null);
@@ -17,24 +26,24 @@ const ExpenseComparison = ({ data, mail, props }) => {
   const fetchData = async (expenses) => {
     try {
       setIsLoading(true);
-      const getCookie = Cookies.get('sessionToken');
+      const getCookie = Cookies.get("sessionToken");
       if (!getCookie) {
-        return navigate('/');
+        return navigate("/");
       }
 
       const resdata = await axios.post(
-        `${process.env.REACT_APP_BACKEND_URL}getAnalysis`,
+        `${process.env.REACT_APP_BACKEND_URL}expense/getAnalysis`,
         {
           salary: data.income,
           age: data.age,
           cityType: data.city,
           userExpenses: expenses,
-          data: data
+          data: data,
         },
         {
           headers: {
             Authorization: `Bearer ${getCookie}`,
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           withCredentials: true,
         }
@@ -47,23 +56,23 @@ const ExpenseComparison = ({ data, mail, props }) => {
       setAverageExpenses({
         "Food at Home": report.foodAtHome.benchmark,
         "Food Away From Home": report.foodAwayFromHome.benchmark,
-        "Housing": report.housing.benchmark,
-        "Transportation": report.transportation.benchmark,
-        "Healthcare": report.healthCare.benchmark,
-        "Education": report.education.benchmark,
-        "Entertainment": report.entertainment.benchmark,
+        Housing: report.housing.benchmark,
+        Transportation: report.transportation.benchmark,
+        Healthcare: report.healthCare.benchmark,
+        Education: report.education.benchmark,
+        Entertainment: report.entertainment.benchmark,
         "Personal Care": report.personalCare.benchmark,
         "Alcoholic Beverages": report.alcoholicBeverages.benchmark,
         "Tobacco Products": report.tobacco.benchmark,
         "Personal Finance": report.personalCare.benchmark,
-        "Savings": report.savings.benchmark,
+        Savings: report.savings.benchmark,
         "Apparel and Services": report.apparelAndServices.benchmark,
         "Other Expenses": report.other.benchmark,
       });
 
       setIsLoading(false);
     } catch (error) {
-      console.error('Error fetching data:', error);
+      console.error("Error fetching data:", error);
       setIsLoading(false);
     }
   };
@@ -110,26 +119,25 @@ const ExpenseComparison = ({ data, mail, props }) => {
     others: "Other Expenses",
   };
 
-
   const expenses = Object.keys(categoryMapping).map((key) => ({
     category: categoryMapping[key],
     amount: parseFloat(data[key]) || 0,
   }));
 
-
-
   const userExpensesByCategory = {};
-  expenses.forEach(expense => {
-    userExpensesByCategory[expense.category] = (userExpensesByCategory[expense.category] || 0) + expense.amount;
+  expenses.forEach((expense) => {
+    userExpensesByCategory[expense.category] =
+      (userExpensesByCategory[expense.category] || 0) + expense.amount;
   });
 
-  const data1 = Object.keys(averageExpenses).map(category => ({
+  const data1 = Object.keys(averageExpenses).map((category) => ({
     category,
-    'Your Expenses': userExpensesByCategory[category] || 0,
-    'Average Expenses': averageExpenses[category],
-    difference: ((userExpensesByCategory[category] || 0) - averageExpenses[category])
+    "Your Expenses": userExpensesByCategory[category] || 0,
+    "Average Expenses": averageExpenses[category],
+    difference:
+      (userExpensesByCategory[category] || 0) - averageExpenses[category],
   }));
-  console.log(data1)
+  console.log(data1);
 
   const formatCurrency = (value) => {
     if (window.innerWidth < 600) {
@@ -139,13 +147,11 @@ const ExpenseComparison = ({ data, mail, props }) => {
     }
   };
 
-
-
   const formatXAxisLabel = (label) => {
     return label
-      .split(' ')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-      .join(' ');
+      .split(" ")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(" ");
   };
 
   if (isLoading) {
@@ -154,8 +160,7 @@ const ExpenseComparison = ({ data, mail, props }) => {
         <Navbar mail={mail} />
         <div className="min-h-screen  bg-gradient-to-br from-indigo-900/70 to-purple-900/70  flex items-center justify-center p-4">
           <div className="flex items-center justify-center">
-            <div className="animate-spin w-16 h-16 border-4 border-white border-t-transparent border-opacity-50 rounded-full">
-            </div>
+            <div className="animate-spin w-16 h-16 border-4 border-white border-t-transparent border-opacity-50 rounded-full"></div>
           </div>
         </div>
       </>
@@ -163,19 +168,22 @@ const ExpenseComparison = ({ data, mail, props }) => {
   }
 
   return (
-    <div className='w-full max-w-6xl mx-auto p-4' style={{ marginTop: '90px', marginBottom: '30px' }}>
+    <div
+      className="w-full max-w-6xl mx-auto p-4"
+      style={{ marginTop: "90px", marginBottom: "30px" }}
+    >
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{
           type: "spring",
           stiffness: 260,
-          damping: 20
+          damping: 20,
         }}
         className="w-full max-w-6xl  rounded-2xl shadow-2xl overflow-hidden"
       >
         {/* Header */}
-        
+
         <div className="bg-gradient-to-br from-indigo-900/70 to-purple-900/70 p-6">
           <motion.h1
             initial={{ opacity: 0, y: -20 }}
@@ -202,46 +210,80 @@ const ExpenseComparison = ({ data, mail, props }) => {
                 }}
                 onMouseLeave={() => setSelectedCategory(null)}
               >
-                <CartesianGrid stroke="#e6e6e6" strokeDasharray="3 3" vertical={false} />
+                <CartesianGrid
+                  stroke="#e6e6e6"
+                  strokeDasharray="3 3"
+                  vertical={false}
+                />
                 <XAxis
                   dataKey="category"
                   angle={window.innerWidth < 600 ? -90 : -45}
                   textAnchor="end"
                   interval={0}
-                  tick={{ fill: 'white', fontSize: '0.75rem', fontWeight: 600 }}
+                  tick={{ fill: "white", fontSize: "0.75rem", fontWeight: 600 }}
                   tickFormatter={formatXAxisLabel}
                   height={80}
                 />
-                <YAxis tickFormatter={formatCurrency} tick={{ fill: 'white' }} />
+                <YAxis
+                  tickFormatter={formatCurrency}
+                  tick={{ fill: "white" }}
+                />
                 <Tooltip
-                  cursor={{ fill: 'transparent' }}
+                  cursor={{ fill: "transparent" }}
                   formatter={(value, name) => [formatCurrency(value), name]}
                   contentStyle={{
-                    backgroundColor: 'bg-gradient-to-br from-indigo-900/70 to-purple-900/70',
-                    border: '1px solid #e0e0e0',
-                    borderRadius: '12px',
-                    boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-                    color: 'white',
+                    backgroundColor:
+                      "bg-gradient-to-br from-indigo-900/70 to-purple-900/70",
+                    border: "1px solid #e0e0e0",
+                    borderRadius: "12px",
+                    boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
+                    color: "white",
                   }}
                 />
-                <Legend verticalAlign="top" wrapperStyle={{ color: "#FFFFFF" }} height={36} />
+                <Legend
+                  verticalAlign="top"
+                  wrapperStyle={{ color: "#FFFFFF" }}
+                  height={36}
+                />
                 <defs>
-                  <linearGradient id="halfRedHalfGreen" x1="1" y1="1" x2="0" y2="0">
-                    <stop offset="50%" stopColor="#F43F5E" />  
-                    <stop offset="50%" stopColor="#10B981" /> 
+                  <linearGradient
+                    id="halfRedHalfGreen"
+                    x1="1"
+                    y1="1"
+                    x2="0"
+                    y2="0"
+                  >
+                    <stop offset="50%" stopColor="#F43F5E" />
+                    <stop offset="50%" stopColor="#10B981" />
                   </linearGradient>
                 </defs>
                 <Bar
                   dataKey="Your Expenses"
                   barSize={40}
                   animationBegin={0}
-                  fill="url(#halfRedHalfGreen)" 
+                  fill="url(#halfRedHalfGreen)"
                   animationDuration={1500}
                   shape={(props) => {
                     const { x, y, width, height, payload } = props;
-                    const barColor = payload["Your Expenses"] > payload["Average Expenses"] ? "#F43F5E" : "#10B981"; // Red if greater, Green otherwise
-                    const opacity = selectedCategory === null || selectedCategory === payload.category ? 1 : 0.3; // Highlight only the selected category
-                    return <rect x={x} y={y} width={width} height={height} fill={barColor} opacity={opacity} />;
+                    const barColor =
+                      payload["Your Expenses"] > payload["Average Expenses"]
+                        ? "#F43F5E"
+                        : "#10B981"; // Red if greater, Green otherwise
+                    const opacity =
+                      selectedCategory === null ||
+                      selectedCategory === payload.category
+                        ? 1
+                        : 0.3; // Highlight only the selected category
+                    return (
+                      <rect
+                        x={x}
+                        y={y}
+                        width={width}
+                        height={height}
+                        fill={barColor}
+                        opacity={opacity}
+                      />
+                    );
                   }}
                 />
 
@@ -253,13 +295,25 @@ const ExpenseComparison = ({ data, mail, props }) => {
                   animationDuration={1500}
                   shape={(props) => {
                     const { x, y, width, height, payload } = props;
-                    const opacity = selectedCategory === null || selectedCategory === payload.category ? 1 : 0.3;
-                    return <rect x={x} y={y} width={width} height={height} fill="#FFEB80" opacity={opacity} />;
+                    const opacity =
+                      selectedCategory === null ||
+                      selectedCategory === payload.category
+                        ? 1
+                        : 0.3;
+                    return (
+                      <rect
+                        x={x}
+                        y={y}
+                        width={width}
+                        height={height}
+                        fill="#FFEB80"
+                        opacity={opacity}
+                      />
+                    );
                   }}
                 />
               </BarChart>
             </ResponsiveContainer>
-
           </div>
 
           {/* Insights Panel */}
@@ -273,8 +327,12 @@ const ExpenseComparison = ({ data, mail, props }) => {
             </motion.h2>
             <AnimatePresence>
               {data1.map((item, index) => {
-                const difference = item['Your Expenses'] - item['Average Expenses'];
-                const percentDiff = ((difference / item['Average Expenses']) * 100).toFixed(1);
+                const difference =
+                  item["Your Expenses"] - item["Average Expenses"];
+                const percentDiff = (
+                  (difference / item["Average Expenses"]) *
+                  100
+                ).toFixed(1);
                 const isHigher = difference > 0;
 
                 return (
@@ -287,7 +345,7 @@ const ExpenseComparison = ({ data, mail, props }) => {
                       delay: index * 0.1,
                       type: "spring",
                       stiffness: 300,
-                      damping: 20
+                      damping: 20,
                     }}
                     whileHover={{ scale: 1.05 }}
                     className="bg-white/30  rounded-xl shadow-md p-4"
@@ -303,10 +361,12 @@ const ExpenseComparison = ({ data, mail, props }) => {
                           <TrendingDownIcon className="w-5 h-5 text-green-400" />
                         )}
                         <span
-                          className={`font-bold ${isHigher ? 'text-red-500' : 'text-green-400'
-                            }`}
+                          className={`font-bold ${
+                            isHigher ? "text-red-500" : "text-green-400"
+                          }`}
                         >
-                          {isHigher ? '+' : '-'}{Math.abs(percentDiff)}%
+                          {isHigher ? "+" : "-"}
+                          {Math.abs(percentDiff)}%
                         </span>
                       </div>
                     </div>

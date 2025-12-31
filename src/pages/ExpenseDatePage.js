@@ -1,46 +1,38 @@
 import React, { useState, useEffect } from "react";
-import Navbar from './navbar';
-import axios from 'axios';
-import Cookies from 'js-cookie';
-import { useNavigate } from 'react-router-dom';
-import { PlusIcon } from 'lucide-react';
+import Navbar from "../components/navbar";
+import axios from "axios";
+import Cookies from "js-cookie";
+import { useNavigate } from "react-router-dom";
+import { PlusIcon } from "lucide-react";
 
-const ExpenseDate = ({ mail }) => {
+const ExpenseDatePage = ({ mail }) => {
   const [data, setData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [count, setCount] = useState(0); 
   const [showPlusButton, setShowPlusButton] = useState(false);
   const navigate = useNavigate();
 
   const fetchData = async () => {
     try {
       setIsLoading(true);
-      const getCookie = Cookies.get('sessionToken');
+      const getCookie = Cookies.get("sessionToken");
 
       if (!getCookie) {
-        navigate('/');
+        navigate("/");
       }
 
-      const [responseData, findEmailResponse] = await Promise.all([
-        axios.get(`${process.env.REACT_APP_BACKEND_URL}getData`, { 
-          params: { "email": mail },
+      const responseData = await axios.get(
+        `${process.env.REACT_APP_BACKEND_URL}user`,
+        {
+          params: { email: mail },
           headers: {
             Authorization: `Bearer ${getCookie}`,
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           withCredentials: true,
-        }),
-        axios.get(`${process.env.REACT_APP_BACKEND_URL}findmail?email=${encodeURIComponent(mail)}`, {
-          headers: {
-            Authorization: `Bearer ${getCookie}`,
-            'Content-Type': 'application/json',
-          },
-          withCredentials: true,
-        })
-      ]);
+        }
+      );
 
       const fetchedData = responseData.data || [];
-      setCount(findEmailResponse.data.count || 0);
       setData(fetchedData);
       setIsLoading(false);
 
@@ -48,17 +40,17 @@ const ExpenseDate = ({ mail }) => {
       const currentMonth = new Date().getMonth();
       const currentYear = new Date().getFullYear();
 
-      const hasCurrentMonth = fetchedData.some(item => {
+      const hasCurrentMonth = fetchedData.some((item) => {
         const date = new Date(item.date.slice(0, 10));
-        return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
+        return (
+          date.getMonth() === currentMonth && date.getFullYear() === currentYear
+        );
       });
 
       setShowPlusButton(!hasCurrentMonth); // Show plus if current month not present
-
     } catch (error) {
-      console.error('Error fetching data:', error);
+      console.error("Error fetching data:", error);
       setIsLoading(false);
-      setCount(0);
       setData([]);
       setShowPlusButton(true); // Show plus if fetch fails
     }
@@ -68,17 +60,19 @@ const ExpenseDate = ({ mail }) => {
     if (mail) {
       fetchData();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mail]);
 
   const handlePlusClick = () => {
-    navigate('/foam');
+    navigate("/form");
   };
 
   if (isLoading) {
     return (
       <>
-        <Navbar mail={mail}/>
-        <div className="
+        <Navbar mail={mail} />
+        <div
+          className="
           min-h-screen 
           w-full 
           bg-gradient-to-br from-indigo-900/70 to-purple-900/70 
@@ -86,10 +80,10 @@ const ExpenseDate = ({ mail }) => {
           flex 
           items-center 
           justify-center
-        ">
+        "
+        >
           <div className="flex items-center justify-center">
-            <div className="animate-spin w-16 h-16 border-4 border-white border-t-transparent border-opacity-50 rounded-full">
-            </div>
+            <div className="animate-spin w-16 h-16 border-4 border-white border-t-transparent border-opacity-50 rounded-full"></div>
           </div>
         </div>
       </>
@@ -98,8 +92,9 @@ const ExpenseDate = ({ mail }) => {
 
   return (
     <>
-      <Navbar mail={mail}/>
-      <div className="
+      <Navbar mail={mail} />
+      <div
+        className="
         min-h-screen 
         w-full 
         bg-gradient-to-br from-indigo-900/70 to-purple-900/70
@@ -108,8 +103,9 @@ const ExpenseDate = ({ mail }) => {
         items-center 
         justify-center
         relative
-      ">
-        <div 
+      "
+      >
+        <div
           className="
             container 
             mx-auto 
@@ -118,17 +114,20 @@ const ExpenseDate = ({ mail }) => {
             md:px-8 
             lg:px-16
           "
-          style={{ marginTop: data.length > 5 ? '90px' : '0px' }}
+          style={{ marginTop: data.length > 5 ? "90px" : "0px" }}
         >
-          <div className={data.length < 6 && window.innerWidth > 600
-          ? "flex flex-row justify-center items-center gap-4 md:gap-6 lg:gap-8"
-          : "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6 lg:gap-8"
-        }>
+          <div
+            className={
+              data.length < 6 && window.innerWidth > 600
+                ? "flex flex-row justify-center items-center gap-4 md:gap-6 lg:gap-8"
+                : "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6 lg:gap-8"
+            }
+          >
             {data.map((dateItem, index) => {
-              const date = new Date(dateItem.date.slice(0,10));         
+              const date = new Date(dateItem.date.slice(0, 10));
               return (
-                <div 
-                  key={index} 
+                <div
+                  key={index}
                   className="
                     w-full 
                     bg-white/15 
@@ -154,9 +153,14 @@ const ExpenseDate = ({ mail }) => {
                     overflow-hidden
                     cursor-pointer
                   "
-                  onClick={() => {navigate('/expenseTracker',{state: {data: dateItem, mail: mail}}) }}
+                  onClick={() => {
+                    navigate("/expenseTracker", {
+                      state: { data: dateItem, mail: mail },
+                    });
+                  }}
                 >
-                  <div className="
+                  <div
+                    className="
                     text-4xl 
                     md:text-5xl 
                     lg:text-6xl 
@@ -169,11 +173,13 @@ const ExpenseDate = ({ mail }) => {
                     transform 
                     transition-transform 
                     group-hover:-translate-y-2
-                  ">
+                  "
+                  >
                     {date.getDate()}
                   </div>
-                  
-                  <div className="
+
+                  <div
+                    className="
                     text-sm 
                     md:text-base 
                     font-medium 
@@ -185,11 +191,14 @@ const ExpenseDate = ({ mail }) => {
                     transform 
                     transition-transform 
                     group-hover:scale-105
-                  ">
-                    {date.toLocaleString('default', { month: 'short' })} {date.getFullYear()}
+                  "
+                  >
+                    {date.toLocaleString("default", { month: "short" })}{" "}
+                    {date.getFullYear()}
                   </div>
-                  
-                  <div className="
+
+                  <div
+                    className="
                     text-xs 
                     md:text-sm 
                     text-white/70 
@@ -200,8 +209,9 @@ const ExpenseDate = ({ mail }) => {
                     transform 
                     transition-transform 
                     group-hover:scale-105
-                  ">
-                    {date.toLocaleString('default', { weekday: 'long' })}
+                  "
+                  >
+                    {date.toLocaleString("default", { weekday: "long" })}
                   </div>
                 </div>
               );
@@ -210,7 +220,7 @@ const ExpenseDate = ({ mail }) => {
         </div>
 
         {showPlusButton && (
-          <button 
+          <button
             onClick={handlePlusClick}
             className="
               fixed 
@@ -239,4 +249,4 @@ const ExpenseDate = ({ mail }) => {
   );
 };
 
-export default ExpenseDate;
+export default ExpenseDatePage;

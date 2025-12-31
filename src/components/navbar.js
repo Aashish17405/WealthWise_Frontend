@@ -1,24 +1,15 @@
-import React, { useState, useEffect } from "react";
-import {
-  Home,
-  Layout,
-  Settings,
-  Bell,
-  Search,
-  Activity,
-  X,
-  LogOut,
-  Wallet,
-} from "lucide-react";
+import { useState, useEffect } from "react";
+import { Home, X, LogOut, Wallet } from "lucide-react";
 import axios from "axios";
 import Cookies from "js-cookie";
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from "react-router-dom";
+import { auth } from "../firebase";
+import { signOut } from "firebase/auth";
+import { toast } from "react-toastify";
 
 const Navbar = (props) => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("home");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [isSearchActive, setIsSearchActive] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [data, setData] = useState({});
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
@@ -31,10 +22,9 @@ const Navbar = (props) => {
       if (!mail) return;
       const getCookie = Cookies.get("sessionToken");
       const response = await axios.get(
-        `${process.env.REACT_APP_BACKEND_URL}getbalance?userId=${encodeURIComponent(
-          mail
-        )}`
-        ,
+        `${
+          process.env.REACT_APP_BACKEND_URL
+        }user/getbalance?userId=${encodeURIComponent(mail)}`,
         {
           headers: {
             Authorization: `Bearer ${getCookie}`,
@@ -65,11 +55,12 @@ const Navbar = (props) => {
     fetchBalance();
 
     // Set up interval to check periodically
-    const intervalId = setInterval(fetchBalance, 10000); // Check every 10 seconds
+    const intervalId = setInterval(fetchBalance, 15000); // Check every 15 seconds
 
     return () => {
       clearInterval(intervalId);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mail, balance]);
 
   // Format currency for display
@@ -88,7 +79,7 @@ const Navbar = (props) => {
       const response = await axios.get(
         `${
           process.env.REACT_APP_BACKEND_URL
-        }findemail?email=${encodeURIComponent(mail)}`,
+        }user/findemail?email=${encodeURIComponent(mail)}`,
         {
           headers: {
             Authorization: `Bearer ${getCookie}`,
@@ -107,6 +98,7 @@ const Navbar = (props) => {
     if (mail) {
       handleProfile();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mail]);
 
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
@@ -126,15 +118,33 @@ const Navbar = (props) => {
     }
   };
 
-  
-  const handleLogout = (e) => {
+  const handleLogout = async (e) => {
     console.log("logout");
     e.preventDefault();
-    Cookies.remove("sessionToken");
-    localStorage.removeItem("userEmail");
-    navigate("/", { replace: true });
-  };
 
+    try {
+      // Sign out from Firebase Auth
+      await signOut(auth);
+
+      // Clear local storage and cookies
+      Cookies.remove("sessionToken");
+      localStorage.removeItem("userEmail");
+
+      // Show success message
+      toast.success("Logout successful!");
+
+      // Navigate to login page
+      navigate("/", { replace: true });
+    } catch (error) {
+      console.error("Error during logout:", error);
+      toast.error("Error occurred during logout. Please try again.");
+
+      // Still clear local data even if Firebase signout fails
+      Cookies.remove("sessionToken");
+      localStorage.removeItem("userEmail");
+      navigate("/", { replace: true });
+    }
+  };
 
   const navItems = [
     {
@@ -183,7 +193,7 @@ const Navbar = (props) => {
               style={{ cursor: "pointer" }}
             >
               <img
-                src="/navlogo1.png"
+                src="/navlog.png"
                 alt="App Logo"
                 className="w-12 h-12 rounded-full"
                 style={{ marginRight: "0px" }}
@@ -207,7 +217,7 @@ const Navbar = (props) => {
                       navigate("/home", { replace: true });
                     }
                     if (item.key === "Chat With Niveshak") {
-                      navigate("/chatbot", { replace: true });
+                      navigate("/chat", { replace: true });
                     }
                   }}
                   className={`
@@ -243,7 +253,7 @@ const Navbar = (props) => {
                       setIsProfileDropdownOpen(!isProfileDropdownOpen);
                     }
                   }}
-                  className="cursor-pointer"
+                  className="cursor-pointer group"
                 >
                   {data.profile ? (
                     <img
@@ -253,10 +263,10 @@ const Navbar = (props) => {
                           ? data.name.charAt(0).toUpperCase()
                           : "Profile"
                       }
-                      className="w-12 h-12 rounded-full border-2 border-white/70 object-cover transform transition-all duration-300 group-hover:scale-110 group-hover:rotate-6 group-hover:shadow-lg"
+                      className="w-12 h-12 rounded-full border-2 border-white/70 object-cover transform transition-all duration-300 group-hover:scale-110 group-hover:border-blue-400 group-hover:shadow-xl group-hover:shadow-blue-500/50"
                     />
                   ) : (
-                    <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center border-2 border-white/70 transform transition-all duration-300 group-hover:scale-110 group-hover:rotate-6 group-hover:shadow-lg">
+                    <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center border-2 border-white/70 transform transition-all duration-300 group-hover:scale-110 group-hover:border-blue-400 group-hover:shadow-xl group-hover:shadow-blue-500/50 group-hover:bg-blue-100">
                       {data.name && data.name.charAt(0) ? (
                         <span className="text-xl font-semibold text-gray-800">
                           {data.name.charAt(0).toUpperCase()}
@@ -269,7 +279,7 @@ const Navbar = (props) => {
                 </div>
 
                 {!isMobile && isProfileDropdownOpen && (
-                  <div className="absolute right-0 top-full mt-2 w-80 h-50 bg-gradient-to-br from-white-600/80 to-blue-800/40 shadow-lg rounded-lg border border-red-500 z-50 flex flex-col items-center justify-center">
+                  <div className="absolute right-0 top-full mt-2 w-80 h-50 bg-blue-900/80 shadow-lg rounded-lg border border-red-500 z-50 flex flex-col items-center justify-center backdrop-blur-sm animate-fade-in-down">
                     <div className="p-4 border-b border-red-500 text-center w-full">
                       <p className="text-sm font-semibold text-gray-200 whitespace-normal">
                         {data.name}
@@ -281,15 +291,15 @@ const Navbar = (props) => {
 
                     {/* Styled Wallet Section */}
                     <div className="w-full p-4 border-b border-red-500">
-                      <div className="bg-gradient-to-r from-purple-600/40 to-blue-600/40 rounded-lg p-4 shadow-inner">
+                      <div className="bg-gradient-to-r from-purple-600/40 to-blue-600/40 rounded-lg p-4 shadow-inner transition-all duration-300 hover:from-purple-600/60 hover:to-blue-600/60 hover:shadow-lg hover:scale-[1.02] cursor-pointer">
                         <div className="flex items-center justify-between mb-2">
                           <span className="text-xs text-gray-300">
                             Available Balance
                           </span>
-                          <Wallet className="w-4 h-4 text-blue-300" />
+                          <Wallet className="w-4 h-4 text-white" />
                         </div>
                         <div
-                          className="text-xl font-bold text-white"
+                          className="text-xl font-bold text-white transition-all duration-300 hover:text-blue-300 hover:scale-105"
                           onClick={() =>
                             navigate("/portfolio", { replace: true })
                           }
@@ -297,7 +307,7 @@ const Navbar = (props) => {
                         >
                           {formatCurrency(balance)}
                         </div>
-                        <div className="text-xs text-blue-300 mt-1">
+                        <div className="text-xs text-white mt-1">
                           Click to manage your portfolio
                         </div>
                       </div>
@@ -305,9 +315,9 @@ const Navbar = (props) => {
 
                     <button
                       onClick={handleLogout}
-                      className="w-full px-4 py-2 flex items-center justify-center text-red-500 hover:text-red-600"
+                      className="w-full px-4 py-2 flex items-center justify-center text-red-500 hover:text-red-600 transition-all duration-300 hover:bg-red-500/10 hover:scale-105 rounded-b-lg"
                     >
-                      <button className="w-4 h-4" onClick={handleLogout}/>
+                      <button className="w-4 h-4" onClick={handleLogout} />
                       Logout
                     </button>
                   </div>
@@ -369,7 +379,7 @@ const Navbar = (props) => {
                     <span className="text-xs text-gray-300">
                       Available Balance
                     </span>
-                    <Wallet className="w-4 h-4 text-blue-300" />
+                    <Wallet className="w-4 h-4 text-white" />
                   </div>
                   <div
                     className="text-xl font-bold text-white"
@@ -381,7 +391,7 @@ const Navbar = (props) => {
                   >
                     {formatCurrency(balance)}
                   </div>
-                  <div className="text-xs text-blue-300 mt-1">
+                  <div className="text-xs text-white mt-1">
                     Click to manage your portfolio
                   </div>
                 </div>
@@ -398,7 +408,7 @@ const Navbar = (props) => {
                       navigate("/home", { replace: true });
                     }
                     if (item.key === "Chat With Niveshak") {
-                      navigate("/chatbot", { replace: true });
+                      navigate("/chat", { replace: true });
                     }
                     setIsMobileMenuOpen(false);
                   }}
@@ -412,14 +422,13 @@ const Navbar = (props) => {
 
             <div className="p-4 border-t">
               <button
-                  onClick={handleLogout}
-                  className="w-full px-4 py-2 flex items-center justify-center text-red-500 hover:text-red-600"
-                >
-                  <LogOut className="w-4 h-4 mr-2" />
-                  Logout
-                </button>
+                onClick={handleLogout}
+                className="w-full px-4 py-2 flex items-center justify-center text-red-500 hover:text-red-600"
+              >
+                <LogOut className="w-4 h-4 mr-2" />
+                Logout
+              </button>
             </div>
-
           </div>
         </div>
       )}

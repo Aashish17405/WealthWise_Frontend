@@ -1,205 +1,141 @@
-import React, { useState, useEffect } from "react";
-import axios from "axios";
-import Cookies from "js-cookie";
-import { ArrowUp, ArrowDown, DollarSign } from "lucide-react";
+import {
+  ArrowDown,
+  ArrowUp,
+  Briefcase,
+  ChevronDown,
+  ChevronUp,
+  Minus,
+} from "lucide-react";
+import { useState } from "react";
 
-const Holdings = ({ data = [], onBuy, onSell }) => {
-  const [currentPrices, setCurrentPrices] = useState({});
-  const [isLoading, setIsLoading] = useState(true);
-  const [sortConfig, setSortConfig] = useState({ key: 'symbol', direction: 'asc' });
+export default function Holdings({ portfolio, onSellStock }) {
+  const [expandedSection, setExpandedSection] = useState("portfolio");
 
-  useEffect(() => {
-    if (data.length > 0) {
-      fetchCurrentPrices();
-    } else {
-      setIsLoading(false);
-    }
-  }, [data]);
-
-  const fetchCurrentPrices = async () => {
-    setIsLoading(true);
-    const getCookie = Cookies.get("sessionToken");
-    
-    try {
-      const symbols = data.map(stock => stock.symbol);
-      const requests = symbols.map(symbol => 
-        axios.get(`${process.env.REACT_APP_BACKEND_URL}stock-price`, {
-          params: { tickers: [symbol] },
-          headers: {
-            Authorization: `Bearer ${getCookie}`,
-            "Content-Type": "application/json",
-          },
-        })
-      );
-      
-      const responses = await Promise.all(requests);
-      
-      const prices = {};
-      responses.forEach((response, index) => {
-        prices[symbols[index]] = response.data.price[0];
-      });
-      
-      setCurrentPrices(prices);
-    } catch (error) {
-      console.error("Error fetching current stock prices:", error);
-    } finally {
-      setIsLoading(false);
-    }
+  const formatCurrency = (value) => {
+    return new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "INR",
+      maximumFractionDigits: 2,
+    }).format(value);
   };
 
-  const handleSort = (key) => {
-    let direction = 'asc';
-    if (sortConfig.key === key && sortConfig.direction === 'asc') {
-      direction = 'desc';
-    }
-    setSortConfig({ key, direction });
+  const getStatusColor = (value) => {
+    if (value > 0) return "text-green-500";
+    if (value < 0) return "text-red-500";
+    return "text-gray-400";
   };
 
-  const sortedData = [...data].sort((a, b) => {
-    // Handle special cases for derived values
-    if (sortConfig.key === 'currentPrice') {
-      const aValue = currentPrices[a.symbol] || 0;
-      const bValue = currentPrices[b.symbol] || 0;
-      return sortConfig.direction === 'asc' ? aValue - bValue : bValue - aValue;
-    }
-    
-    if (sortConfig.key === 'profitLoss') {
-      const aPL = ((currentPrices[a.symbol] || 0) - a.boughtPrice) * a.quantity;
-      const bPL = ((currentPrices[b.symbol] || 0) - b.boughtPrice) * b.quantity;
-      return sortConfig.direction === 'asc' ? aPL - bPL : bPL - aPL;
-    }
-    
-    if (sortConfig.key === 'profitLossPercentage') {
-      const aPLP = ((currentPrices[a.symbol] || 0) - a.boughtPrice) / a.boughtPrice * 100;
-      const bPLP = ((currentPrices[b.symbol] || 0) - b.boughtPrice) / b.boughtPrice * 100;
-      return sortConfig.direction === 'asc' ? aPLP - bPLP : bPLP - aPLP;
-    }
-    
-    // Normal sorting for direct properties
-    if (a[sortConfig.key] < b[sortConfig.key]) {
-      return sortConfig.direction === 'asc' ? -1 : 1;
-    }
-    if (a[sortConfig.key] > b[sortConfig.key]) {
-      return sortConfig.direction === 'asc' ? 1 : -1;
-    }
-    return 0;
-  });
-
-  const getSortIcon = (key) => {
-    if (sortConfig.key !== key) return null;
-    return sortConfig.direction === 'asc' ? 
-      <ArrowUp className="w-4 h-4 inline-block ml-1" /> : 
-      <ArrowDown className="w-4 h-4 inline-block ml-1" />;
+  const toggleSection = (section) => {
+    setExpandedSection(expandedSection === section ? null : section);
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center p-8">
-        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-white"></div>
-      </div>
-    );
-  }
-
-  if (data.length === 0) {
-    return (
-      <div className="text-center p-6 text-white">
-        <p>No stocks in your portfolio.</p>
-      </div>
-    );
-  }
+  const openSellModal = (stock) => {
+    if (onSellStock) {
+      onSellStock(stock);
+    }
+  };
 
   return (
-    <div className="overflow-x-auto">
-      <table className="min-w-full divide-y divide-gray-200/30">
-        <thead>
-          <tr>
-            <th 
-              className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer"
-              onClick={() => handleSort('symbol')}
-            >
-              Symbol {getSortIcon('symbol')}
-            </th>
-            <th 
-              className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer"
-              onClick={() => handleSort('quantity')}
-            >
-              Quantity {getSortIcon('quantity')}
-            </th>
-            <th 
-              className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer"
-              onClick={() => handleSort('boughtPrice')}
-            >
-              Bought Price {getSortIcon('boughtPrice')}
-            </th>
-            <th 
-              className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer"
-              onClick={() => handleSort('currentPrice')}
-            >
-              Current Price {getSortIcon('currentPrice')}
-            </th>
-            <th 
-              className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer"
-              onClick={() => handleSort('profitLoss')}
-            >
-              P/L {getSortIcon('profitLoss')}
-            </th>
-            <th 
-              className="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider"
-            >
-              Actions
-            </th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-gray-200/20">
-          {sortedData.map((stock) => {
-            const currentPrice = currentPrices[stock.symbol] || 0;
-            const profitLoss = (currentPrice - stock.boughtPrice) * stock.quantity;
-            const profitLossPercentage = ((currentPrice - stock.boughtPrice) / stock.boughtPrice) * 100;
-            
-            return (
-              <tr key={stock.symbol} className="hover:bg-white/10">
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="font-medium text-white">{stock.symbol}</div>
-                  {stock.name && <div className="text-sm text-gray-300">{stock.name}</div>}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-white">
-                  {stock.quantity}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-white">
-                  ${stock.boughtPrice.toFixed(2)}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-white">
-                  ${currentPrice.toFixed(2)}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className={`font-medium ${profitLoss >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                    ${Math.abs(profitLoss).toFixed(2)}
-                    <span className="ml-1 text-xs">
-                      ({profitLoss >= 0 ? '+' : '-'}{Math.abs(profitLossPercentage).toFixed(2)}%)
-                    </span>
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <button
-                    onClick={() => onBuy && onBuy(stock)}
-                    className="text-green-400 hover:text-green-300 mr-3"
+    <div className="bg-white/10 backdrop-blur-sm rounded-xl border border-white/20 mb-6 overflow-hidden">
+      <div
+        className="p-6 cursor-pointer flex justify-between items-center"
+        onClick={() => toggleSection("portfolio")}
+      >
+        <h2 className="text-xl font-semibold flex items-center">
+          <Briefcase className="w-5 h-5 mr-2" />
+          Portfolio Holdings
+        </h2>
+        {expandedSection === "portfolio" ? (
+          <ChevronUp className="w-5 h-5" />
+        ) : (
+          <ChevronDown className="w-5 h-5" />
+        )}
+      </div>
+
+      {expandedSection === "portfolio" && (
+        <div className="overflow-x-auto">
+          {portfolio.portfolio && portfolio.portfolio.length > 0 ? (
+            <table className="w-full">
+              <thead className="border-b border-white/10">
+                <tr className="text-sm text-gray-300">
+                  <th className="py-3 px-6 text-left">Stock</th>
+                  <th className="py-3 px-6 text-right">Quantity</th>
+                  <th className="py-3 px-6 text-right">Bought Price</th>
+                  <th className="py-3 px-6 text-right">Current Price</th>
+                  <th className="py-3 px-6 text-right">Value</th>
+                  <th className="py-3 px-6 text-right">P&L</th>
+                  <th className="py-3 px-6 text-right">P&L %</th>
+                  <th className="py-3 px-6 text-center">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {portfolio.portfolio.map((stock, index) => (
+                  <tr
+                    key={stock.symbol}
+                    className={`${
+                      index !== portfolio.portfolio.length - 1
+                        ? "border-b border-white/10"
+                        : ""
+                    } hover:bg-white/5`}
                   >
-                    Buy
-                  </button>
-                  <button
-                    onClick={() => onSell && onSell(stock)}
-                    className="text-red-400 hover:text-red-300"
-                  >
-                    Sell
-                  </button>
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+                    <td className="py-4 px-6 font-medium">{stock.symbol}</td>
+                    <td className="py-4 px-6 text-right">{stock.quantity}</td>
+                    <td className="py-4 px-6 text-right">
+                      {formatCurrency(stock.boughtPrice)}
+                    </td>
+                    <td className="py-4 px-6 text-right">
+                      <div className="flex items-center justify-end">
+                        {formatCurrency(stock.currentPrice)}
+                        {stock.currentPrice > stock.boughtPrice && (
+                          <ArrowUp className="ml-1 w-4 h-4 text-green-400" />
+                        )}
+                        {stock.currentPrice < stock.boughtPrice && (
+                          <ArrowDown className="ml-1 w-4 h-4 text-red-400" />
+                        )}
+                      </div>
+                    </td>
+                    <td className="py-4 px-6 text-right font-medium">
+                      {formatCurrency(stock.value)}
+                    </td>
+                    <td
+                      className={`py-4 px-6 text-right font-medium ${getStatusColor(
+                        stock.profitLoss
+                      )}`}
+                    >
+                      {stock.profitLoss > 0 && "+"}
+                      {formatCurrency(stock.profitLoss)}
+                    </td>
+                    <td
+                      className={`py-4 px-6 text-right ${getStatusColor(
+                        stock.profitLossPercentage
+                      )}`}
+                    >
+                      {stock.profitLossPercentage > 0 && "+"}
+                      {stock.profitLossPercentage.toFixed(2)}%
+                    </td>
+                    <td className="py-4 px-6 text-center">
+                      <button
+                        onClick={() => openSellModal(stock)}
+                        className="bg-red-600 hover:bg-red-700 text-white py-1 px-3 rounded inline-flex items-center text-sm transition-colors"
+                      >
+                        <Minus className="w-3 h-3 mr-1" />
+                        Sell
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <div className="p-6 text-center">
+              <p className="text-gray-300">
+                Your portfolio is empty. Start investing to see your holdings
+                here.
+              </p>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
-};
-
-export default Holdings;
+}
